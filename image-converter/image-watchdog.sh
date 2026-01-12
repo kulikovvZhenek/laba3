@@ -2,11 +2,29 @@
 # image-watchdog.sh - Конвертер PNG → JPG, WEBP, AVIF для Windows
 # Использует ТОЛЬКО magick (не convert)
 
-# ========== НАСТРОЙКИ ==========
-CHECK_INTERVAL=3                     # Интервал проверки (секунды)
-JPG_QUALITY=85                       # Качество JPG (1-100)
-WEBP_QUALITY=80                      # Качество WebP (1-100)
-AVIF_QUALITY=70                      # Качество AVIF (1-100)
+# ========== КОНФИГУРАЦИЯ ==========
+CONFIG_FILE="image-converter.conf"
+
+# Загрузка конфигурации
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        # Читаем настройки из файла
+        source <(grep -E '^[A-Z_]+=' "$CONFIG_FILE" 2>/dev/null)
+        echo "✅ Загружена конфигурация из $CONFIG_FILE"
+    else
+        # Значения по умолчанию
+        CHECK_INTERVAL=3
+        JPG_QUALITY=85
+        WEBP_QUALITY=80
+        AVIF_QUALITY=70
+        WATCH_DIR="./images"
+        LOG_LEVEL="INFO"
+        echo "⚠️  Конфигурационный файл не найден, использую значения по умолчанию"
+    fi
+}
+
+# Загружаем конфигурацию
+load_config
 # ===============================
 
 # Проверка аргументов
@@ -162,6 +180,13 @@ for pattern in "*.png" "*.PNG"; do
 done
 
 echo "✅ Начинаю мониторинг новых файлов..."
+echo ""
+# Выводим текущие настройки
+echo "⚙️  Текущие настройки:"
+echo "   Интервал: $CHECK_INTERVAL сек"
+echo "   Качество: JPG=$JPG_QUALITY%, WebP=$WEBP_QUALITY%, AVIF=$AVIF_QUALITY%"
+echo "   Папка: $WATCH_DIR"
+echo "   Уровень логов: $LOG_LEVEL"
 echo ""
 
 # Основной цикл

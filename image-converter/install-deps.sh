@@ -1,0 +1,25 @@
+#!/bin/bash
+# install-deps-windows-simple.sh - Простая установка для Windows
+
+echo "🪟 Установка Image Converter для Windows"
+echo "========================================"
+
+echo ""
+echo "📦 Для работы скрипта НУЖНО установить:"
+echo ""
+echo "1️⃣  ImageMagick (ОБЯЗАТЕЛЬНО):"
+echo "   👉 Скачайте с: https://imagemagick.org/script/download.php#windows"
+echo "   👉 Выберите: ImageMagick-7.x.x-Q16-HDRI-x64-dll.exe"
+echo "   👉 При установке ОТМЕТЬТЕ: 'Add application directory to your system path'"
+echo ""
+echo "2️⃣  WebP tools (ОПЦИОНАЛЬНО, для лучшего сжатия):"
+echo "   👉 Скачайте: https://developers.google.com/speed/webp/download"
+echo "   👉 Распакуйте и скопируйте cwebp.exe в C:\Windows\System32"
+echo ""
+echo "3️⃣  AVIF tools (ОПЦИОНАЛЬНО, для современного формата):"
+echo "   👉 Скачайте: https://github.com/AOMediaCodec/libavif/releases"
+echo "   👉 Распакуйте и скопируйте avifenc.exe в C:\Windows\System32"
+echo ""
+echo "🔄 После установки ПЕРЕЗАПУСТИТЕ Git Bash"
+echo ""
+echo "✅ После этого запускайте: ./image-watchdog.sh /путь/к/папке"

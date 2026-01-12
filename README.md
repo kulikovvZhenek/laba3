@@ -2,6 +2,10 @@
 
 Автоматический конвертер изображений, который мониторит папку и конвертирует PNG в JPG, WebP и AVIF.
 
+![EditorConfig Check](https://github.com/kulikovvZhenek/laba3/workflows/EditorConfig%20Check/badge.svg)
+
+**Статус проверки кода:** [![EditorConfig](https://img.shields.io/badge/EditorConfig-проверка-blue)](https://github.com/kulikovvZhenek/laba3/actions)
+
 ## ✨ Особенности
 
 - **Автоматический мониторинг** указанной папки

@@ -1,0 +1,147 @@
+name: EditorConfig Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Запуск вручную
+  workflow_dispatch:
+
+jobs:
+  check-editorconfig:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Получаем код
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    # 2. Проверяем EditorConfig
+    - name: Check EditorConfig compliance
+      id: editorconfig-check
+      run: |
+        echo "🔍 Начинаю проверку EditorConfig..."
+        
+        # Простая проверка: проверяем основные правила
+        
+        # 1. Проверяем наличие .editorconfig
+        if [ ! -f ".editorconfig" ]; then
+          echo "❌ Файл .editorconfig не найден"
+          echo "result=error" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+        # 2. Проверяем отступы в .sh файлах (должны быть 2 пробела)
+        echo "📝 Проверяю .sh файлы..."
+        ERROR_COUNT=0
+        
+        for file in *.sh; do
+          if [ -f "$file" ]; then
+            # Проверяем табы (не должно быть)
+            if grep -q $'\t' "$file"; then
+              echo "  ❌ $file: найден таб (должны быть пробелы)"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          fi
+        done
+        
+        # 3. Проверяем .yml файлы
+        for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+          if [ -f "$file" ]; then
+            # Проверяем что отступы = 2 пробела
+            if grep -q '^   [^ ]' "$file"; then
+              echo "  ⚠️  $file: возможны неправильные отступы (должны быть 2 пробела)"
+            fi
+          fi
+        done
+        
+        # 4. Итог
+        if [ $ERROR_COUNT -eq 0 ]; then
+          echo "✅ Все проверки пройдены!"
+          echo "result=success" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Найдено $ERROR_COUNT ошибок"
+          echo "result=failure" >> $GITHUB_OUTPUT
+        fi
+    
+    # 3. Создаём бейдж
+    - name: Create status badge
+      if: always()
+      run: |
+        echo "🛡️ Создаю бейдж статуса..."
+        
+        # Определяем цвет и текст бейджа
+        if [ "${{ steps.editorconfig-check.outputs.result }}" == "success" ]; then
+          BADGE_LABEL="EditorConfig"
+          BADGE_MESSAGE="пройдена"
+          BADGE_COLOR="brightgreen"
+          STATUS="✅"
+        elif [ "${{ steps.editorconfig-check.outputs.result }}" == "failure" ]; then
+          BADGE_LABEL="EditorConfig"
+          BADGE_MESSAGE="ошибки"
+          BADGE_COLOR="red"
+          STATUS="❌"
+        else
+          BADGE_LABEL="EditorConfig"
+          BADGE_MESSAGE="проверка"
+          BADGE_COLOR="blue"
+          STATUS="🔵"
+        fi
+        
+        # Создаём URL для бейджа shields.io
+        BADGE_URL="https://img.shields.io/badge/$BADGE_LABEL-$BADGE_MESSAGE-$BADGE_COLOR"
+        
+        # Создаём файл с бейджем
+        echo "![EditorConfig Check]($BADGE_URL)" > editorconfig-badge.md
+        
+        # Обновляем README.md если он существует
+        if [ -f "README.md" ]; then
+          echo "📄 Обновляю README.md..."
+          
+          # Удаляем старый бейдж если есть
+          sed -i '/!\[EditorConfig Check\]/d' README.md
+          
+          # Добавляем новый бейдж в конец
+          echo "" >> README.md
+          echo "## 📊 Статус проверки" >> README.md
+          echo "" >> README.md
+          echo "$STATUS **EditorConfig:** ![EditorConfig Check]($BADGE_URL)" >> README.md
+          echo "" >> README.md
+          echo "*Последняя проверка: $(date +'%Y-%m-%d %H:%M')*" >> README.md
+          
+          # Показываем что изменили
+          echo "--- ДОБАВЛЕНО В README.md ---"
+          tail -10 README.md
+          echo "-----------------------------"
+        fi
+        
+        echo "✅ Бейдж создан: $BADGE_URL"
+    
+    # 4. Коммитим изменения в README если нужно
+    - name: Commit badge changes
+      if: always()
+      run: |
+        # Настраиваем Git
+        git config --global user.name 'GitHub Actions Bot'
+        git config --global user.email 'actions@github.com'
+        
+        # Коммитим изменения если есть
+        if git diff --quiet README.md; then
+          echo "📝 Нет изменений для коммита"
+        else
+          echo "📝 Коммичу изменения в README.md..."
+          git add README.md
+          git commit -m "docs: update EditorConfig badge [skip ci]"
+          git push
+        fi
+    
+    # 5. Сохраняем артефакты
+    - name: Upload results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: editorconfig-results
+        path: |
+          editorconfig-badge.md
+        retention-days: 7
